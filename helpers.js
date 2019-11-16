@@ -103,56 +103,62 @@ const item_sort = () => {
         moved_item.a = item.a;
         item.a = 0;
     });
-};
-
-/**
- *  Fast compound by name
- *  依造物品名稱快速合成
- *
- *  @example fast_compound('ringsj',0,locate_item("cscroll0"));
- *
- *  @param {string} item_name
- *  @param {number} item_lv - you want compound item lv
- *  @param {number} scroll_num
- *  @param {?number} offering_num
- *  @returns {void}
- */
-function fast_compound(item_name, item_lv, scroll_num, offering_num) {
-
-    let items = get_items_by_name(item_name, item_lv);
-
-    if (items.length < 3) {
-        parent.add_log(`${item_name} item not enough`, colors.code_error);
-        return;
-    }
-
-    parent.compound(items[0].index, items[1].index, items[2].index, scroll_num, offering_num, 'code');
 }
 
-/**
- * Get item by name
- * 依造名稱取得物品
- *
- * @param {string} item_name
- * @param {?number} item_lv
- * @returns {Array} items data
- */
-const get_items_by_name = (item_name, item_lv = -1) => {
+//handle if character died go back position
+let handle_rip=()=>{
+	if (character.rip){
+		const x=character.x
+		const y=character.y
+		const rip_map=character.map
+		attack_mode=false
+		respawn()
+		smart_move({map:rip_map,x:x,y:y},()=>{
+			attack_mode=true
+		})
+	}
+}
 
-    let items = character.items.map((item, index) => {
-
-        if (item) {
-            item.index = index;
-        }
-        return item;
-
-    }).filter(x => !!x).filter(item => item.name === item_name);
-
-    if (item_lv > -1) {
-        items = items.filter(item => {
-            return item.level === item_lv;
-        })
-    }
-
-    return items;
-};
+//auto buy potion default 500 hpot1
+let buy_potion_mode=false
+let check_potion=()=>{
+	if (character.gold<2000){
+		return
+	}
+	let hp_num=0
+	let mp_num=0
+	character.items.forEach(item=>{if ( item !== null && item.name.match("hpot*") !== null ){hp_num=hp_num+item.q}})
+	character.items.forEach(item=>{if ( item !== null && item.name.match("mpot*") !== null ){mp_num=mp_num+item.q}})
+	if ((hp_num == 0 || mp_num == 0) && (buy_potion_mode == false) ){
+		//go back to buy
+		buy_potion_mode=true
+		attack_mode=false
+		const x=character.x
+		const y=character.y
+		const last_map=character.map
+		smart_move("main",()=>{
+			buy("hpot1",500)
+			.then(
+				data=>{
+					game_log("buy 500 hp potion")
+					buy("mpot1",500-mp_num)
+				}
+			)
+			.catch(
+				data=>{
+					buy("hpot1",Math.floor(character.gold/G.items.hpot1.g))
+                }
+			)
+			.then(
+				data=>{
+					smart_move({map:last_map,x:x,y:y},()=>{
+						buy_potion_mode=false;
+						attack_mode=true;
+						}
+					)
+				}
+			)
+		})
+	}
+	
+}
