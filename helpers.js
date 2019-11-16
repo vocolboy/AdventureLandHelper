@@ -1,14 +1,40 @@
 /**
+ *  Get current map players
+ *  取得當前地圖玩家
+ *  @returns {Array} players data
+ */
+function get_current_map_players() {
+    let players = [];
+
+    Object.keys(parent.entities).forEach(function (key) {
+        let entity = parent.entities[key];
+        if (!entity.npc && entity.player) {
+            players.push(parent.entities[key])
+        }
+    });
+
+    return players;
+}
+
+/**
  *  Get nearest players
  *  取得附近玩家
  *  @returns {Array} players data
  */
-function get_nearest_players() {
-    let players = [];
+function get_nearest_players(args) {
+    if (!args) args = {};
 
-    Object.keys(parent.entities).forEach(function (key) {
-        if (parent.entities[key].player) {
-            players.push(parent.entities[key])
+    if (!args.range) {
+        args.range = character && character.range;
+    }
+
+    let players = get_current_map_players();
+
+    players.filter(function (player) {
+        let distance = parent.distance(character, player);
+
+        if (distance < args.range) {
+            return true;
         }
     });
 
@@ -76,7 +102,7 @@ function item_sort() {
             return moved_item.a === index;
         });
 
-        if(!moved_item) return;
+        if (!moved_item) return;
 
         moved_item.a = item.a;
         item.a = 0;
