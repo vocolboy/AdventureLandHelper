@@ -19,6 +19,7 @@ const get_current_map_players = () => {
 /**
  *  Get nearest players
  *  取得附近玩家
+ *  @param {Object} {range:100} skill range or attack range
  *  @returns {Array} players data
  */
 const get_nearest_players = ({range = character && character.range} = {}) => {
