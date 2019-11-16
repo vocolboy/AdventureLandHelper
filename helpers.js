@@ -162,3 +162,29 @@ let check_potion=()=>{
 	}
 	
 }
+
+//help priest watch party member hp and heal them
+let  priest_auto_partyheal=()=>{
+    //check character is Periest
+    if (character.ctype!="priest"){
+        return
+    }
+    let party_list=parent.party_list;
+    let need_healing=false
+    party_list.forEach(
+        name=>{
+            let member=get_entity(name)
+            if (member!==undefined){
+                if ((member.hp/member.max_hp)<0.5){
+                    need_healing=true
+                }
+            }
+        }
+    )
+    if (need_healing){
+        if (character.mp<400){
+            use_hp_or_mp()
+        }
+        use_skill("partyheal")
+    }
+}
