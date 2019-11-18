@@ -106,17 +106,26 @@ const item_sort = () => {
 }
 
 //handle if character died go back position
+let has_respawn=true
+let rip_location={}
 let handle_rip=()=>{
 	if (character.rip){
-		const x=character.x
-		const y=character.y
-		const rip_map=character.map
-		attack_mode=false
+        if (has_respawn===true){
+            rip_location={x:character.x,y:character.y,rip_map:character.map}
+            attack_mode=false
+            has_respawn=false
+        }
 		respawn()
-		smart_move({map:rip_map,x:x,y:y},()=>{
+		
+    }else if (has_respawn===false){
+        has_respawn=true
+        smart_move({map:rip_location.rip_map,x:Math.floor(rip_location.x),y:Math.floor(rip_location.y)},()=>{
 			attack_mode=true
-		})
-	}
+        })
+        game_log(rip_location.rip_map)
+        game_log(rip_location.x)
+        game_log(rip_location.y)
+    }
 }
 
 //auto buy potion default 500 hpot1
@@ -188,3 +197,4 @@ let  priest_auto_partyheal=()=>{
         use_skill("partyheal")
     }
 }
+
