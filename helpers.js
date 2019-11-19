@@ -1,6 +1,7 @@
 /**
  *  Get current map players
  *  取得當前地圖玩家
+ *
  *  @returns {Array} players data
  */
 const get_current_map_players = () => {
@@ -19,7 +20,9 @@ const get_current_map_players = () => {
 /**
  *  Get nearest players
  *  取得附近玩家
- *  @param {Object} {range:100} skill range or attack range
+ *
+ *  @param {Object} args - {range:100} skill range or attack range
+ *  @param {number} args.range
  *  @returns {Array} players data
  */
 const get_nearest_players = ({range = character && character.range} = {}) => {
@@ -39,6 +42,7 @@ const get_nearest_players = ({range = character && character.range} = {}) => {
 /**
  * Get party list
  * 取得隊員名稱
+ *
  * @return {Array} Only players name
  */
 const get_party_list = () => parent.party_list;
@@ -46,6 +50,7 @@ const get_party_list = () => parent.party_list;
 /**
  * Sort item by name
  * 依造物品名稱排序
+ *
  * @returns {void}
  */
 const item_sort = () => {
@@ -53,7 +58,7 @@ const item_sort = () => {
     items.forEach((element, index) => {
         if (!element) {
             items[index] = {
-                "name": "zzz"
+                'name': 'zzz'
             }
         }
     });
@@ -86,7 +91,7 @@ const item_sort = () => {
     items.forEach((item, index) => {
         if (!item.a) return;
 
-        parent.socket.emit("imove", {
+        parent.socket.emit('imove', {
             a: item.a,
             b: index
         });
@@ -98,4 +103,55 @@ const item_sort = () => {
         moved_item.a = item.a;
         item.a = 0;
     });
+};
+
+/**
+ *  Fast compound by name
+ *  依造物品名稱快速合成
+ *
+ *  @example fast_compound('ringsj',0,locate_item("cscroll0"));
+ *
+ *  @param {string} item_name
+ *  @param {number} item_lv - you want compound item lv
+ *  @param {number} scroll_num
+ *  @param {?number} offering_num
+ *  @returns {void}
+ */
+function fast_compound(item_name, item_lv, scroll_num, offering_num) {
+
+    let items = get_items_by_name(item_name, item_lv);
+
+    if (items.length < 3) {
+        add_log(`${item_name} item not enough`, colors.code_error);
+    }
+
+    parent.compound(items[0].index, items[1].index, items[2].index, scroll_num, offering_num, 'code');
+}
+
+/**
+ * Get item by name
+ * 依造名稱取得物品
+ *
+ * @param {string} item_name
+ * @param {?number} item_lv
+ * @returns {Array} items data
+ */
+const get_items_by_name = (item_name, item_lv = -1) => {
+
+    let items = character.items.map((item, index) => {
+
+        if (item) {
+            item.index = index;
+        }
+        return item;
+
+    }).filter(x => !!x).filter(item => item.name === item_name);
+
+    if (item_lv > -1) {
+        items = items.filter(item => {
+            return item.level === item_lv;
+        })
+    }
+
+    return items;
 };
