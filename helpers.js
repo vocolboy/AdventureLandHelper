@@ -122,7 +122,7 @@ function fast_compound(item_name, item_lv, scroll_num, offering_num) {
     let items = get_items_by_name(item_name, item_lv);
 
     if (items.length < 3) {
-        add_log(`${item_name} item not enough`, colors.code_error);
+        parent.add_log(`${item_name} item not enough`, colors.code_error);
     }
 
     parent.compound(items[0].index, items[1].index, items[2].index, scroll_num, offering_num, 'code');
