@@ -144,18 +144,28 @@ let check_potion=()=>{
 		attack_mode=false
 		const x=character.x
 		const y=character.y
-		const last_map=character.map
+        const last_map=character.map
+        //default is no hp pot 
+        let first_buy="hpot1"
+        let second_buy="mpot1"
+        let second_left_num=mp_num
 		smart_move("main",()=>{
-			buy("hpot1",500)
+            if (mp_num==0){
+                first_buy="mpot1"
+                second_buy="hpot1"
+                second_left_num=hp_num
+            }
+			buy(first_buy,500)
 			.then(
 				data=>{
 					game_log("buy 500 hp potion")
-					buy("mpot1",500-mp_num)
+					buy(second_buy,500-second_left_num)
 				}
 			)
 			.catch(
+                //buy fall may be not enough money
 				data=>{
-					buy("hpot1",Math.floor(character.gold/G.items.hpot1.g))
+					buy(first_buy,Math.floor(character.gold/G.items.hpot1.g))
                 }
 			)
 			.then(
@@ -198,3 +208,23 @@ let  priest_auto_partyheal=()=>{
     }
 }
 
+
+let party_leader_priority=["lulalu","DarckArcher"]
+let party_check=()=>{
+    if (character.party!=null){
+        return
+    }
+    send
+}
+on_party_invite=(name)=>{
+    accept_party_invite(name)
+}
+let id=locate_item("seashell")
+while (id!==-1 && character.items[id].q<20){
+	exchange(id)
+}
+
+parent.api_call("pull_friends");
+
+show_json(parent.info);
+game.on('api_response',function(data){show_json(data);})
