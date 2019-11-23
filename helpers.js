@@ -130,49 +130,66 @@ let handle_rip=()=>{
 
 //auto buy potion default 500 hpot1
 let buy_potion_mode=false
-let check_potion=()=>{
+let check_potion=(limit={hp:500,mp:500})=>{
 	if (character.gold<2000){
 		return
-	}
+    }
+    if (limit.hp==undefined){
+        limit.hp=500
+    }
+    if (limit.mp==undefined){
+        limit.mp=500
+    }
 	let hp_num=0
 	let mp_num=0
-	character.items.forEach(item=>{if ( item !== null && item.name.match("hpot*") !== null ){hp_num=hp_num+item.q}})
-	character.items.forEach(item=>{if ( item !== null && item.name.match("mpot*") !== null ){mp_num=mp_num+item.q}})
+	character.items.forEach(
+        item=>{
+            if ( item !== null && item.name.match("hpot*") !== null ){hp_num=hp_num+item.q;return;}
+            if ( item !== null && item.name.match("mpot*") !== null ){mp_num=mp_num+item.q;return;}
+        }
+    )
 	if ((hp_num == 0 || mp_num == 0) && (buy_potion_mode == false) ){
 		//go back to buy
 		buy_potion_mode=true
-		attack_mode=false
+        attack_mode=false
+        //record now location
 		const x=character.x
 		const y=character.y
         const last_map=character.map
+        const last_attack_mode=attack_mode
         //default is no hp pot 
+        let first_limit=limit.hp
         let first_buy="hpot1"
         let second_buy="mpot1"
         let second_left_num=mp_num
+        let second_limit=limit.mp
+        if (mp_num==0){
+            first_limit=limit.mp
+            first_buy="mpot1"
+            second_buy="hpot1"
+            second_left_num=hp_num
+            second_limit=limit.hp
+        }
 		smart_move("main",()=>{
-            if (mp_num==0){
-                first_buy="mpot1"
-                second_buy="hpot1"
-                second_left_num=hp_num
-            }
-			buy(first_buy,500)
+			buy(first_buy,first_limit)
 			.then(
 				data=>{
-					game_log("buy 500 hp potion")
-					buy(second_buy,500-second_left_num)
+					buy(second_buy,second_limit-second_left_num)
 				}
 			)
 			.catch(
                 //buy fall may be not enough money
 				data=>{
-					buy(first_buy,Math.floor(character.gold/G.items.hpot1.g))
+                    if(data.reason=="cost"){
+                        buy(first_buy,Math.floor(character.gold/G.items.hpot1.g))
+                    }
                 }
 			)
 			.then(
 				data=>{
 					smart_move({map:last_map,x:x,y:y},()=>{
 						buy_potion_mode=false;
-						attack_mode=true;
+						attack_mode=last_attack_mode;
 						}
 					)
 				}
@@ -216,15 +233,4 @@ let party_check=()=>{
     }
     send
 }
-on_party_invite=(name)=>{
-    accept_party_invite(name)
-}
-let id=locate_item("seashell")
-while (id!==-1 && character.items[id].q<20){
-	exchange(id)
-}
 
-parent.api_call("pull_friends");
-
-show_json(parent.info);
-game.on('api_response',function(data){show_json(data);})
