@@ -79,12 +79,11 @@ let upgrade_level=(id,max_level)=>{
         let scroll_level=undefined
         switch (item_grade(item)){
             case 0:
-                if (item.level>4){
+                if (item.level>3){
                     scroll_level="scroll1"
                 }else{
                     scroll_level="scroll0"
                 }
-                
             break
             case 1:
                 scroll_level="scroll1"
@@ -131,10 +130,59 @@ let upgrade_level=(id,max_level)=>{
         }
     }
 }
-//usage
-// setInterval(()=>{
-// 	upgrade_level("wgloves",7)
-// 	upgrade_level("wattire",7)
-// 	upgrade_level("slimestaff",7)
-// 	upgrade_level("wcap",7)
-// },3000)
+//usage:
+//sell_item("gslime")
+//sell_item(["gslime","hpamulet"])
+//sell_item([{name:"gslime"},{name:"hpamulet",max_level:"2"}])
+let sell_item=(sell_list)=>{
+    //preprocessing 
+    let list=[]
+    switch (typeof(sell_list)){
+        case 'object':
+            if ("name" in sell_list){
+                list.push(sell_list);
+            }
+            break;
+        case 'string':
+            list.push({name:sell_list});
+            break;
+        case 'array':
+            sell_list.forEach(
+                data=>{
+                    if (tyepof(data)=='string'){
+                        list.push({name:data})
+                    }else if (tyepof(data)=='object'){
+                        if ("name" in data){
+                            list.push(data);
+                        }
+                    }
+                }
+            )
+            break;
+        default:
+            return
+    }
+
+    for(let i=0;i<41;i++){
+        for (let j=0;j<list.length;j++){
+            if(character.items[i]==null){
+				continue
+			}
+            let item=list[j]
+            let ch_item=character.items[i]
+            if (ch_item.name==item.name){
+                if("max_level" in item){
+                    if(item.max_level>ch_item.level){
+                        game_log("sell item:"+item.name)
+                        sell(i,ch_item.q)
+                    }
+                }else{
+                    game_log("sell item:"+item.name)
+                    sell(i,ch_item.q)
+                }
+            }
+        }
+    }
+}
+
+
