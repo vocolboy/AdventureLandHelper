@@ -139,31 +139,30 @@ let sell_item=(sell_list)=>{
     let list=[]
     switch (typeof(sell_list)){
         case 'object':
-            if ("name" in sell_list){
+            if (Array.isArray(sell_list)){
+                sell_list.forEach(
+                    data=>{
+                        if (typeof(data)=='string'){
+                            list.push({name:data})
+                        }else if (typeof(data)=='object'){
+                            if ("name" in data){
+                                list.push(data);
+                            }
+                        }
+                    }
+                )
+            }else if("name" in sell_list){
                 list.push(sell_list);
             }
             break;
         case 'string':
             list.push({name:sell_list});
             break;
-        case 'array':
-            sell_list.forEach(
-                data=>{
-                    if (tyepof(data)=='string'){
-                        list.push({name:data})
-                    }else if (tyepof(data)=='object'){
-                        if ("name" in data){
-                            list.push(data);
-                        }
-                    }
-                }
-            )
-            break;
         default:
             return
     }
 
-    for(let i=0;i<41;i++){
+    for(let i=0;i<character.items.length;i++){
         for (let j=0;j<list.length;j++){
             if(character.items[i]==null){
 				continue
@@ -172,7 +171,7 @@ let sell_item=(sell_list)=>{
             let ch_item=character.items[i]
             if (ch_item.name==item.name){
                 if("max_level" in item){
-                    if(item.max_level>ch_item.level){
+                    if(item.max_level>=ch_item.level){
                         game_log("sell item:"+item.name)
                         sell(i,ch_item.q)
                     }
@@ -184,5 +183,3 @@ let sell_item=(sell_list)=>{
         }
     }
 }
-
-
