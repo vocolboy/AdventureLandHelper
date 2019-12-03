@@ -26,17 +26,13 @@ const get_current_map_players = () => {
  *  @returns {Array} players data
  */
 const get_nearest_players = ({range = character && character.range} = {}) => {
-    let players = get_current_map_players();
-
-    players.filter(function (player) {
+    return get_current_map_players().filter(function (player) {
         let distance = parent.distance(character, player);
 
         if (distance < range) {
             return true;
         }
     });
-
-    return players;
 };
 
 /**
