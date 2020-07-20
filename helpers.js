@@ -99,56 +99,134 @@ const item_sort = () => {
         moved_item.a = item.a;
         item.a = 0;
     });
-};
-
-/**
- *  Fast compound by name
- *  依造物品名稱快速合成
- *
- *  @example fast_compound('ringsj',0,locate_item("cscroll0"));
- *
- *  @param {string} item_name
- *  @param {number} item_lv - you want compound item lv
- *  @param {number} scroll_num
- *  @param {?number} offering_num
- *  @returns {void}
- */
-function fast_compound(item_name, item_lv, scroll_num, offering_num) {
-
-    let items = get_items_by_name(item_name, item_lv);
-
-    if (items.length < 3) {
-        parent.add_log(`${item_name} item not enough`, colors.code_error);
-        return;
-    }
-
-    parent.compound(items[0].index, items[1].index, items[2].index, scroll_num, offering_num, 'code');
 }
 
-/**
- * Get item by name
- * 依造名稱取得物品
- *
- * @param {string} item_name
- * @param {?number} item_lv
- * @returns {Array} items data
- */
-const get_items_by_name = (item_name, item_lv = -1) => {
-
-    let items = character.items.map((item, index) => {
-
-        if (item) {
-            item.index = index;
+//handle if character died go back position
+let has_respawn=true
+let rip_location={}
+let handle_rip=()=>{
+	if (character.rip){
+        if (has_respawn===true){
+            rip_location={x:character.x,y:character.y,rip_map:character.map}
+            attack_mode=false
+            has_respawn=false
         }
-        return item;
-
-    }).filter(x => !!x).filter(item => item.name === item_name);
-
-    if (item_lv > -1) {
-        items = items.filter(item => {
-            return item.level === item_lv;
+		respawn()
+		
+    }else if (has_respawn===false){
+        has_respawn=true
+        smart_move({map:rip_location.rip_map,x:Math.floor(rip_location.x),y:Math.floor(rip_location.y)},()=>{
+			attack_mode=true
         })
+        game_log(rip_location.rip_map)
+        game_log(rip_location.x)
+        game_log(rip_location.y)
     }
+}
 
-    return items;
-};
+//auto buy potion default 500 hpot1
+let buy_potion_mode=false
+let check_potion=(limit={hp:500,mp:500})=>{
+	if (character.gold<2000){
+		return
+    }
+    if (limit.hp==undefined){
+        limit.hp=500
+    }
+    if (limit.mp==undefined){
+        limit.mp=500
+    }
+	let hp_num=0
+	let mp_num=0
+	character.items.forEach(
+        item=>{
+            if ( item !== null && item.name.match("hpot*") !== null ){hp_num=hp_num+item.q;return;}
+            if ( item !== null && item.name.match("mpot*") !== null ){mp_num=mp_num+item.q;return;}
+        }
+    )
+	if ((hp_num == 0 || mp_num == 0) && (buy_potion_mode == false) ){
+		//go back to buy
+		buy_potion_mode=true
+        attack_mode=false
+        //record now location
+		const x=character.x
+		const y=character.y
+        const last_map=character.map
+        const last_attack_mode=attack_mode
+        //default is no hp pot 
+        let first_limit=limit.hp
+        let first_buy="hpot1"
+        let second_buy="mpot1"
+        let second_left_num=mp_num
+        let second_limit=limit.mp
+        if (mp_num==0){
+            first_limit=limit.mp
+            first_buy="mpot1"
+            second_buy="hpot1"
+            second_left_num=hp_num
+            second_limit=limit.hp
+        }
+		smart_move("main",()=>{
+			buy(first_buy,first_limit)
+			.then(
+				data=>{
+					buy(second_buy,second_limit-second_left_num)
+				}
+			)
+			.catch(
+                //buy fall may be not enough money
+				data=>{
+                    if(data.reason=="cost"){
+                        buy(first_buy,Math.floor(character.gold/G.items.hpot1.g))
+                    }
+                }
+			)
+			.then(
+				data=>{
+					smart_move({map:last_map,x:x,y:y},()=>{
+						buy_potion_mode=false;
+						attack_mode=last_attack_mode;
+						}
+					)
+				}
+			)
+		})
+	}
+	
+}
+
+//help priest watch party member hp and heal them
+let  priest_auto_partyheal=()=>{
+    //check character is Periest
+    if (character.ctype!="priest"){
+        return
+    }
+    let party_list=parent.party_list;
+    let need_healing=false
+    party_list.forEach(
+        name=>{
+            let member=get_entity(name)
+            if (member!==undefined){
+                if ((member.hp/member.max_hp)<0.5){
+                    need_healing=true
+                }
+            }
+        }
+    )
+    if (need_healing){
+        if (character.mp<400){
+            use_hp_or_mp()
+        }
+        use_skill("partyheal")
+    }
+}
+
+
+let party_leader_priority=["lulalu","DarckArcher"]
+let party_check=()=>{
+    if (character.party!=null){
+        return
+    }
+    send
+}
+
